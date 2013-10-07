@@ -8,4 +8,5 @@ setup(
     packages=['mediagoblin_picscout'],
     include_package_data=True,
     license='AGPLv3',
+    install_requires=['requests'],
 )

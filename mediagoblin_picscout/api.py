@@ -67,7 +67,7 @@ def picscout_lookup(request):
         url = "https://api.picscout.com/v1/images/" + id
         r = requests.get(url, params={'key': api_key})
         response_data = r.json()
-        print response_data
+
         if r.status_code != 200:
             details = {'errorDetails': response_data.get('errorDetails', {u'errorCode': 0, u'description': u'Unknown error'})}
             return Response(json.dumps(details), status=r.status_code)

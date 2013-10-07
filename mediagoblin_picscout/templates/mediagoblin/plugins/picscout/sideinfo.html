@@ -1,0 +1,102 @@
+{# MediaGoblin plugin for embedding RDF metadata as RDFa
+#
+# Copyright 2013 Commons Machinery http://commonsmachinery.se/
+#
+# Authors: Artem Popov <artfwo@commonsmachinery.se>
+#
+# Distributed under GNU Affero GPL v3, please see LICENSE in the top dir.
+#}
+
+{% block picscout %}
+
+<h3 style="margin:15px 0;">PicScout data</h3>
+<h5 id="loadpicscout_button" class="button_action" style="font-size:small;">Load PicScout data</h4>
+
+<div id="loading" style="display: none; margin: 15px;">
+  <img alt="Loading..." src="{{ request.staticdirect('ajax-loader.gif', 'mediagoblin_picscout') }}" />
+</div>
+
+<div id="picscout_output" style="margin-top:15px; font-size:small;">
+  <!-- placeholder -->
+</div>
+
+<script type="text/javascript">
+  // format an imageDetails field as a table row
+  function formatDetailsField(data, field, label) {
+    if (data[field] != null) {
+      if (field=="servingUrl") {
+        return "<tr><td style=\"padding-right:20px;\">" + label + "</td><td><a href=\"" + data[field] + "\">Link</a></td>";
+      } else if (field=="purchaseUrl") {
+        return "<tr><td style=\"padding-right:20px;\">" + label + "</td><td><a href=\"" + data[field] + "\">Purchase</a></td>";
+      } else {
+        return "<tr><td style=\"padding-right:20px;\">" + label + "</td><td>" + data[field] + "</td>";
+      }
+    } else {
+      return "";
+    }
+  }
+
+  $(document).ajaxStart(function () {
+    $("#picscout_output").hide();
+    $("#loading").show();
+  });
+
+  $(document).ajaxComplete(function () {
+    $("#picscout_output").show();
+    $("#loading").hide();
+  });
+
+  $("#loadpicscout_button").click(function() {
+    $.ajax({
+      type: "GET",
+      url: "/api/picscout/picscout_lookup",
+      data: { media_id: {{ media.id }} },
+      error: function(request, status, error) {
+        html = "";
+        html += "<p>Error: ";
+        html += error;
+        html += "</p>";
+        $("#picscout_output").html(html);
+      },
+      success: function(data) {
+        $("#picscout_output").html("");
+        html = "";
+        data = jQuery.parseJSON(data);
+
+        if (data["imageDetails"] != null) {
+          html += "<table><tbody>";
+          html += formatDetailsField(data["imageDetails"], "title", "Title");
+          html += formatDetailsField(data["imageDetails"], "category", "Category");
+          html += formatDetailsField(data["imageDetails"], "servingUrl", "Serving&nbsp;URL");
+          html += formatDetailsField(data["imageDetails"], "id", "ID");
+          html += formatDetailsField(data["imageDetails"], "tags", "Tags");
+          html += formatDetailsField(data["imageDetails"], "geoLocation", "Geolocation");
+          html += formatDetailsField(data["imageDetails"], "dateCreated", "Date");
+          html += formatDetailsField(data["imageDetails"], "copyrightRegNumber", "Copyright Reg. Number");
+          html += formatDetailsField(data["imageDetails"], "copyrightHolder", "Copyright");
+          html += "</tbody></table>";
+
+          if (data["imageDetails"]["licensingInfo"] != null) {
+            html += "<h4 style=\"margin-top:15px;\">Licesing Options</h4>"
+            for (var i=0; i < data["imageDetails"]["licensingInfo"].length; i++) {
+              license_info = data["imageDetails"]["licensingInfo"][i];
+
+              html += "<table style=\"margin-top:15px;\"><tbody>";
+              html += formatDetailsField(license_info, "name", "Name");
+              html += formatDetailsField(license_info, "types", "Types");
+              html += formatDetailsField(license_info, "purchaseUrl", "Purchase");
+              html += "</tbody></table>";
+            }
+          }
+        } else {
+          html += "<p>Image not found.</p>";
+        }
+        $("#picscout_output").html(html);
+        $("#loadpicscout_button").off('click');
+      }
+    });
+    return (false);
+  });
+</script>
+
+{% endblock %}

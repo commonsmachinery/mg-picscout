@@ -1,0 +1,4 @@
+include README.*
+recursive-include mediagoblin_picscout *.ini
+recursive-include mediagoblin_picscout *.html
+recursive-include mediagoblin_picscout *.gif
